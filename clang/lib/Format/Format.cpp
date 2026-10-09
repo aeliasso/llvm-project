@@ -531,6 +531,7 @@ template <> struct ScalarEnumerationTraits<FormatStyle::LanguageKind> {
     IO.enumCase(Value, "CSharp", FormatStyle::LK_CSharp);
     IO.enumCase(Value, "Json", FormatStyle::LK_Json);
     IO.enumCase(Value, "Verilog", FormatStyle::LK_Verilog);
+    IO.enumCase(Value, "DML", FormatStyle::LK_DML);
   }
 };
 
@@ -2055,6 +2056,20 @@ FormatStyle getLLVMStyle(FormatStyle::LanguageKind Language) {
 
   // Defaults that differ when not C++.
   switch (Language) {
+  case FormatStyle::LK_DML:
+    LLVMStyle.AlignAfterOpenBracket = true;
+    LLVMStyle.AlignOperands = FormatStyle::OAS_Align;
+    LLVMStyle.AllowShortFunctionsOnASingleLine = {};
+    LLVMStyle.BreakBeforeBinaryOperators = FormatStyle::BOS_NonAssignment;
+    LLVMStyle.ColumnLimit = 79;
+    LLVMStyle.ContinuationIndentWidth = 4;
+    LLVMStyle.FixNamespaceComments = false;
+    LLVMStyle.IndentWidth = 4;
+    LLVMStyle.SortIncludes = {};
+    LLVMStyle.SpacesInContainerLiterals = false;
+    LLVMStyle.TabWidth = 4;
+    LLVMStyle.UseTab = FormatStyle::UT_Never;
+    break;
   case FormatStyle::LK_TableGen:
     LLVMStyle.SpacesInContainerLiterals = false;
     break;
@@ -4266,9 +4281,11 @@ reformat(const FormatStyle &Style, StringRef Code,
 
   SmallVector<AnalyzerPass, 16> Passes;
 
-  Passes.emplace_back([&](const Environment &Env) {
-    return IntegerLiteralSeparatorFixer().process(Env, Expanded);
-  });
+  if (!Style.isDML()) {
+    Passes.emplace_back([&](const Environment &Env) {
+      return IntegerLiteralSeparatorFixer().process(Env, Expanded);
+    });
+  }
 
   Passes.emplace_back([&](const Environment &Env) {
     return NumericLiteralCaseFixer().process(Env, Expanded);
@@ -4530,6 +4547,8 @@ static FormatStyle::LanguageKind getLanguageByFileName(StringRef &FileName) {
 
   if (FileName.ends_with(".c"))
     return FormatStyle::LK_C;
+  if (FileName.ends_with_insensitive(".dml"))
+    return FormatStyle::LK_DML;
   if (FileName.ends_with(".java"))
     return FormatStyle::LK_Java;
   if (FileName.ends_with_insensitive(".js") ||

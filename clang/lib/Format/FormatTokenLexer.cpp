@@ -90,6 +90,11 @@ ArrayRef<FormatToken *> FormatTokenLexer::lex() {
 
   enum { FO_None, FO_CurrentLine, FO_NextLine } FormatOff = FO_None;
   llvm::Regex FormatOffRegex(Style.OneLineFormatOffRegex);
+  bool DMLConditionalBlock = false;
+  bool DMLConditionalAwaitingBody = false;
+  bool DMLConditionalAwaitingChain = false;
+  bool DMLConditionalSawHash = false;
+  unsigned DMLConditionalBraceDepth = 0;
   do {
     Tokens.push_back(getNextToken());
 
@@ -135,6 +140,65 @@ ArrayRef<FormatToken *> FormatTokenLexer::lex() {
     }
 
     tryMergePreviousTokens();
+
+    if (Style.isDML()) {
+      auto IsDMLConditionalKeyword = [this](const FormatToken &Token) {
+        return Token.is(tok::kw_if) || Token.is(Keywords.kw_foreach) ||
+               Token.is(Keywords.kw_select);
+      };
+      auto StopDMLConditional = [&]() {
+        DMLConditionalBlock = false;
+        DMLConditionalAwaitingBody = false;
+        DMLConditionalAwaitingChain = false;
+        DMLConditionalSawHash = false;
+        DMLConditionalBraceDepth = 0;
+        FormattingDisabled = false;
+        Tok.Finalized = false;
+      };
+
+      if (DMLConditionalAwaitingChain) {
+        if (!DMLConditionalSawHash && Tok.is(tok::hash)) {
+          DMLConditionalSawHash = true;
+          Tok.Finalized = true;
+        } else if (DMLConditionalSawHash &&
+                   Tok.isOneOf(tok::kw_else, tok::kw_if)) {
+          DMLConditionalAwaitingChain = false;
+          DMLConditionalSawHash = false;
+          DMLConditionalAwaitingBody = true;
+          Tok.Finalized = true;
+        } else if (DMLConditionalSawHash || !Tok.is(tok::hash)) {
+          StopDMLConditional();
+        }
+      } else if (!DMLConditionalBlock && Tokens.size() >= 2 &&
+                 Tokens[Tokens.size() - 2]->is(tok::hash) &&
+                 IsDMLConditionalKeyword(Tok) &&
+                 (Tokens[Tokens.size() - 2]->IsFirst ||
+                  Tokens[Tokens.size() - 2]->HasUnescapedNewline ||
+                  (Tokens.size() >= 3 &&
+                   Tokens[Tokens.size() - 3]->isOneOf(tok::semi, tok::l_brace,
+                                                      tok::r_brace)))) {
+        DMLConditionalBlock = true;
+        DMLConditionalAwaitingBody = true;
+        FormattingDisabled = true;
+        Tokens[Tokens.size() - 2]->Finalized = true;
+        Tok.Finalized = true;
+      }
+
+      if (DMLConditionalBlock && !DMLConditionalAwaitingBody) {
+        if (Tok.is(tok::l_brace)) {
+          ++DMLConditionalBraceDepth;
+        } else if (Tok.is(tok::r_brace) && DMLConditionalBraceDepth > 0 &&
+                   --DMLConditionalBraceDepth == 0) {
+          DMLConditionalAwaitingChain = true;
+        }
+        Tok.Finalized = true;
+      } else if (DMLConditionalBlock && DMLConditionalAwaitingBody &&
+                 Tok.is(tok::l_brace)) {
+        DMLConditionalAwaitingBody = false;
+        DMLConditionalBraceDepth = 1;
+        Tok.Finalized = true;
+      }
+    }
 
     if (Style.isCSharp()) {
       // This needs to come after tokens have been merged so that C#

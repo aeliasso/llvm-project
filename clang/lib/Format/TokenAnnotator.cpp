@@ -150,7 +150,7 @@ private:
   }
 
   bool parseAngle() {
-    if (!CurrentToken)
+    if (!CurrentToken || Style.isDML())
       return false;
 
     auto *Left = CurrentToken->Previous; // The '<'.
@@ -1360,6 +1360,17 @@ private:
         return false;
       // Goto labels and case labels are already identified in
       // UnwrappedLineParser.
+      if (Style.isDML()) {
+        if (Contexts.back().ContextKind == tok::l_square) {
+          Tok->overwriteFixedType(TT_DMLBitRangeColon);
+          break;
+        }
+        if (Tok->NestingLevel == 0 && Line.First &&
+            Line.First->isOneOf(Keywords.kw_log, Keywords.kw_after)) {
+          Tok->overwriteFixedType(TT_DMLStatementColon);
+          break;
+        }
+      }
       if (Tok->isTypeFinalized())
         break;
       // Colons from ?: are handled in parseConditional().
@@ -2456,6 +2467,10 @@ private:
       Contexts.back().FirstStartOfName = nullptr;
     } else if (Current.isOneOf(tok::kw_auto, tok::kw___auto_type)) {
       AutoFound = true;
+    } else if (Current.is(tok::arrow) && Style.isDML() && Current.Previous &&
+               Current.Previous->is(tok::r_paren) && Current.Next &&
+               Current.Next->is(tok::l_paren)) {
+      Current.setType(TT_TrailingReturnArrow);
     } else if (Current.is(tok::arrow) && Style.isJava()) {
       Current.setType(TT_LambdaArrow);
     } else if (Current.is(tok::arrow) && Style.isVerilog()) {
@@ -4727,6 +4742,33 @@ bool TokenAnnotator::spaceRequiredBeforeParens(const FormatToken &Right) const {
 bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
                                           const FormatToken &Left,
                                           const FormatToken &Right) const {
+  if (Style.isDML()) {
+    auto IsBitRangeColon = [](const FormatToken &Tok) {
+      if (Tok.isNot(tok::colon))
+        return false;
+      const FormatToken *Bound = Tok.getPreviousNonComment();
+      const FormatToken *LSquare =
+          Bound ? Bound->getPreviousNonComment() : nullptr;
+      const FormatToken *At =
+          LSquare ? LSquare->getPreviousNonComment() : nullptr;
+      return LSquare && LSquare->is(tok::l_square) && At && At->is(tok::at);
+    };
+    if (IsBitRangeColon(Left) || IsBitRangeColon(Right))
+      return false;
+    if (Right.is(tok::colon) &&
+        Right.isNoneOf(TT_ConditionalExpr, TT_CaseLabelColon,
+                       TT_GotoLabelColon)) {
+      return false;
+    }
+  }
+  if (Style.isDML() && (Left.is(tok::at) || Right.is(tok::at) ||
+                        (Left.is(Keywords.kw_is) && Right.is(tok::l_paren)))) {
+    return true;
+  }
+  if (Left.is(TT_DMLBitRangeColon) || Right.is(TT_DMLBitRangeColon))
+    return false;
+  if (Right.is(TT_DMLStatementColon))
+    return false;
   if (Left.is(tok::kw_return) &&
       Right.isNoneOf(tok::semi, tok::r_paren, tok::hashhash)) {
     return true;
@@ -5213,6 +5255,34 @@ bool TokenAnnotator::spaceRequiredBefore(const AnnotatedLine &Line,
     return true;
   }
 
+  if (Style.isDML()) {
+    auto IsBitRangeColon = [](const FormatToken &Tok) {
+      if (Tok.isNot(tok::colon))
+        return false;
+      const FormatToken *Bound = Tok.getPreviousNonComment();
+      const FormatToken *LSquare =
+          Bound ? Bound->getPreviousNonComment() : nullptr;
+      const FormatToken *At =
+          LSquare ? LSquare->getPreviousNonComment() : nullptr;
+      return LSquare && LSquare->is(tok::l_square) && At && At->is(tok::at);
+    };
+    if (IsBitRangeColon(Left) || IsBitRangeColon(Right))
+      return false;
+    if (Right.is(tok::colon)) {
+      bool IsTernaryColon = false;
+      for (const FormatToken *Tok = &Left; Tok; Tok = Tok->Previous) {
+        if (Tok->is(tok::semi))
+          break;
+        if (Tok->is(tok::question) && Tok->NestingLevel == Right.NestingLevel) {
+          IsTernaryColon = true;
+          break;
+        }
+      }
+      if (!IsTernaryColon)
+        return false;
+    }
+  }
+
   // Leave a space between * and /* to avoid C4138 `comment end` found outside
   // of comment.
   if (Left.is(tok::star) && Right.is(tok::comment))
@@ -5228,6 +5298,9 @@ bool TokenAnnotator::spaceRequiredBefore(const AnnotatedLine &Line,
     }
     return Style.SpaceInEmptyBraces == FormatStyle::SIEB_Always;
   }
+
+  if (Style.isDML() && Left.is(tok::hash) && Right.is(tok::colon))
+    return false;
 
   const auto *BeforeLeft = Left.Previous;
 

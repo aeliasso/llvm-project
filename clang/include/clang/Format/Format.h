@@ -3838,7 +3838,9 @@ struct FormatStyle {
     /// Should be used for Verilog and SystemVerilog.
     /// https://standards.ieee.org/ieee/1800/6700/
     /// https://sci-hub.st/10.1109/IEEESTD.2018.8299595
-    LK_Verilog
+    LK_Verilog,
+    /// Should be used for Device Modeling Language.
+    LK_DML
   };
   bool isCpp() const {
     return Language == LK_Cpp || Language == LK_C || Language == LK_ObjC;
@@ -3851,6 +3853,7 @@ struct FormatStyle {
   bool isTextProto() const { return Language == LK_TextProto; }
   bool isProto() const { return Language == LK_Proto || isTextProto(); }
   bool isTableGen() const { return Language == LK_TableGen; }
+  bool isDML() const { return Language == LK_DML; }
 
   /// The language that this format style targets.
   /// \note
@@ -6569,6 +6572,8 @@ inline StringRef getLanguageName(FormatStyle::LanguageKind Language) {
     return "TextProto";
   case FormatStyle::LK_Verilog:
     return "Verilog";
+  case FormatStyle::LK_DML:
+    return "DML";
   default:
     return "Unknown";
   }

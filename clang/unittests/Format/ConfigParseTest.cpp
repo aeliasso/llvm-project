@@ -1489,6 +1489,13 @@ TEST(ConfigParseTest, AllowCommentOnlyConfigFile) {
   EXPECT_EQ(Style.Language, FormatStyle::LK_Cpp);
 }
 
+TEST(ConfigParseTest, ParsesDMLLanguage) {
+  FormatStyle Style = {};
+  Style.Language = FormatStyle::LK_DML;
+  EXPECT_EQ(parseConfiguration("Language: DML", &Style), ParseError::Success);
+  EXPECT_EQ(Style.Language, FormatStyle::LK_DML);
+}
+
 TEST(ConfigParseTest, AllowCppForC) {
   FormatStyle Style = {};
   Style.Language = FormatStyle::LK_C;
@@ -1650,6 +1657,9 @@ TEST(ConfigParseTest, GetStyleOfFile) {
   auto StyleTd = getStyle("file", "x.td", "llvm", "", &FS);
   ASSERT_TRUE((bool)StyleTd);
   ASSERT_EQ(*StyleTd, getLLVMStyle(FormatStyle::LK_TableGen));
+  auto StyleDML = getStyle("file", "x.dml", "llvm", "", &FS);
+  ASSERT_TRUE((bool)StyleDML);
+  ASSERT_EQ(*StyleDML, getLLVMStyle(FormatStyle::LK_DML));
 
   // Test 9.1.1: overwriting a file style, when no parent file exists with no
   // fallback style.

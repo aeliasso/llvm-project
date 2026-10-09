@@ -22693,6 +22693,7 @@ TEST_F(FormatTest, StructuredBindings) {
 TEST_F(FormatTest, FileAndCode) {
   EXPECT_EQ(FormatStyle::LK_C, guessLanguage("foo.c", ""));
   EXPECT_EQ(FormatStyle::LK_C, guessLanguage("foo.c.in", ""));
+  EXPECT_EQ(FormatStyle::LK_DML, guessLanguage("foo.dml", ""));
   EXPECT_EQ(FormatStyle::LK_Cpp, guessLanguage("foo.cc", ""));
   EXPECT_EQ(FormatStyle::LK_ObjC, guessLanguage("foo.m", ""));
   EXPECT_EQ(FormatStyle::LK_ObjC, guessLanguage("foo.mm", ""));

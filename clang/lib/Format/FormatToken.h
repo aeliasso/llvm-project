@@ -74,6 +74,8 @@ namespace format {
   TYPE(DesignatedInitializerPeriod)                                            \
   TYPE(DictLiteral)                                                            \
   TYPE(DoWhile)                                                                \
+  TYPE(DMLBitRangeColon)                                                       \
+  TYPE(DMLStatementColon)                                                      \
   TYPE(ElseLBrace)                                                             \
   TYPE(ElseRBrace)                                                             \
   TYPE(EnumEqual)                                                              \
@@ -1206,6 +1208,32 @@ struct AdditionalKeywords {
     kw_when = &IdentTable.get("when");
     kw_where = &IdentTable.get("where");
 
+    // DML keywords not shared with other supported languages.
+    kw_after = &IdentTable.get("after");
+    kw_attribute = &IdentTable.get("attribute");
+    kw_bank = &IdentTable.get("bank");
+    kw_bitorder = &IdentTable.get("bitorder");
+    kw_connect = &IdentTable.get("connect");
+    kw_device = &IdentTable.get("device");
+    kw_dml = &IdentTable.get("dml");
+    kw_each = &IdentTable.get("each");
+    kw_field = &IdentTable.get("field");
+    kw_group = &IdentTable.get("group");
+    kw_hook = &IdentTable.get("hook");
+    kw_implement = &IdentTable.get("implement");
+    kw_independent = &IdentTable.get("independent");
+    kw_log = &IdentTable.get("log");
+    kw_method = &IdentTable.get("method");
+    kw_param = &IdentTable.get("param");
+    kw_port = &IdentTable.get("port");
+    kw_register = &IdentTable.get("register");
+    kw_saved = &IdentTable.get("saved");
+    kw_select = &IdentTable.get("select");
+    kw_session = &IdentTable.get("session");
+    kw_shared = &IdentTable.get("shared");
+    kw_subdevice = &IdentTable.get("subdevice");
+    kw_template = &IdentTable.get("template");
+
     // Verilog keywords
     kw_always = &IdentTable.get("always");
     kw_always_comb = &IdentTable.get("always_comb");
@@ -1634,6 +1662,32 @@ struct AdditionalKeywords {
   IdentifierInfo *kw_when;
   IdentifierInfo *kw_where;
 
+  // DML keywords not shared with other supported languages.
+  IdentifierInfo *kw_after;
+  IdentifierInfo *kw_attribute;
+  IdentifierInfo *kw_bank;
+  IdentifierInfo *kw_bitorder;
+  IdentifierInfo *kw_connect;
+  IdentifierInfo *kw_device;
+  IdentifierInfo *kw_dml;
+  IdentifierInfo *kw_each;
+  IdentifierInfo *kw_field;
+  IdentifierInfo *kw_group;
+  IdentifierInfo *kw_hook;
+  IdentifierInfo *kw_implement;
+  IdentifierInfo *kw_independent;
+  IdentifierInfo *kw_log;
+  IdentifierInfo *kw_method;
+  IdentifierInfo *kw_param;
+  IdentifierInfo *kw_port;
+  IdentifierInfo *kw_register;
+  IdentifierInfo *kw_saved;
+  IdentifierInfo *kw_select;
+  IdentifierInfo *kw_session;
+  IdentifierInfo *kw_shared;
+  IdentifierInfo *kw_subdevice;
+  IdentifierInfo *kw_template;
+
   // Verilog keywords
   IdentifierInfo *kw_always;
   IdentifierInfo *kw_always_comb;
@@ -1798,6 +1852,12 @@ struct AdditionalKeywords {
   IdentifierInfo *kw_list;
   IdentifierInfo *kw_multiclass;
   IdentifierInfo *kw_then;
+
+  bool isDMLObjectKeyword(const FormatToken &Tok) const {
+    return Tok.isOneOf(kw_device, kw_bank, kw_register, kw_field, kw_group,
+                       kw_attribute, kw_connect, kw_interface, kw_port,
+                       kw_implement, kw_event, kw_subdevice, kw_template);
+  }
 
   /// Returns \c true if \p Tok is a keyword or an identifier.
   bool isWordLike(const FormatToken &Tok, bool IsVerilog = true) const {

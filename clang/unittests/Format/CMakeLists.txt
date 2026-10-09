@@ -11,6 +11,7 @@ add_distinct_clang_unittest(FormatTests
   FormatTest.cpp
   FormatTestComments.cpp
   FormatTestCSharp.cpp
+  FormatTestDML.cpp
   FormatTestJS.cpp
   FormatTestJava.cpp
   FormatTestJson.cpp

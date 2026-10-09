@@ -5410,6 +5410,9 @@ the configuration (without a prefix: ``Auto``).
     https://standards.ieee.org/ieee/1800/6700/
     https://sci-hub.st/10.1109/IEEESTD.2018.8299595
 
+  * ``LK_DML`` (in configuration: ``DML``)
+    Should be used for Device Modeling Language.
+
 
 
 .. _LineEnding:

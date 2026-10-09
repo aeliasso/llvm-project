@@ -1459,6 +1459,54 @@ void UnwrappedLineParser::readTokenWithJavaScriptASI() {
 void UnwrappedLineParser::parseStructuralElement(
     const FormatToken *OpeningBrace, IfStmtKind *IfKind,
     FormatToken **IfLeftBrace, bool *HasDoWhile, bool *HasLabel) {
+  if (Style.isDML()) {
+    while (FormatTok->isOneOf(Keywords.kw_hook, Keywords.kw_independent,
+                              Keywords.kw_shared) ||
+           FormatTok->TokenText == "inline" ||
+           FormatTok->TokenText == "startup" ||
+           FormatTok->TokenText == "memoized") {
+      nextToken();
+    }
+
+    const bool IsMethod = FormatTok->is(Keywords.kw_method);
+    const bool IsObject = Keywords.isDMLObjectKeyword(*FormatTok) ||
+                          (FormatTok->is(Keywords.kw_in) &&
+                           Tokens->peekNextToken()->is(Keywords.kw_each));
+    if (FormatTok->is(Keywords.kw_foreach)) {
+      nextToken();
+      while (!eof() && FormatTok->isNoneOf(tok::l_brace, tok::semi))
+        if (FormatTok->is(tok::l_paren))
+          parseParens();
+        else
+          nextToken();
+      if (FormatTok->is(tok::l_brace)) {
+        FormatTok->setFinalizedType(TT_ControlStatementLBrace);
+        parseBlock();
+      } else if (FormatTok->is(tok::semi)) {
+        nextToken();
+      }
+      addUnwrappedLine();
+      return;
+    }
+
+    if (IsMethod || IsObject) {
+      while (!eof() && FormatTok->isNoneOf(tok::l_brace, tok::semi))
+        if (FormatTok->is(tok::l_paren))
+          parseParens();
+        else
+          nextToken();
+      if (FormatTok->is(tok::l_brace)) {
+        FormatTok->setFinalizedType(IsMethod ? TT_FunctionLBrace
+                                             : TT_ClassLBrace);
+        parseBlock(/*MustBeDeclaration=*/!IsMethod);
+      } else if (FormatTok->is(tok::semi)) {
+        nextToken();
+      }
+      addUnwrappedLine();
+      return;
+    }
+  }
+
   if (Style.isTableGen() && FormatTok->is(tok::pp_include)) {
     nextToken();
     if (FormatTok->is(tok::string_literal))
@@ -5025,7 +5073,7 @@ void UnwrappedLineParser::readToken(int LevelDifference) {
         FirstNonCommentOnLine, *FormatTok, PreviousWasComment);
     PreviousWasComment = FormatTok->is(tok::comment);
 
-    while (!Line->InPPDirective && FormatTok->is(tok::hash) &&
+    while (!Style.isDML() && !Line->InPPDirective && FormatTok->is(tok::hash) &&
            FirstNonCommentOnLine) {
       // In Verilog, the backtick is used for macro invocations. In TableGen,
       // the single hash is used for the paste operator.
