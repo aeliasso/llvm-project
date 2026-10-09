@@ -69,6 +69,16 @@ TEST_F(FormatTestDML, PointerParametersInExplicitObjectExtensions) {
                "}");
 }
 
+TEST_F(FormatTestDML, ContinuedLogStringsUseStatementIndentation) {
+  verifyFormat("template foo {\n"
+               "    method my_method(transaction_t *t) {\n"
+               "        log info, 1: \"A loooooooooooooong log string that "
+               "says that my_method\"\n"
+               "            + \" was called\";\n"
+               "    }\n"
+               "}");
+}
+
 TEST_F(FormatTestDML, IndentsBlocksAndAttachesBraces) {
   verifyFormat("device d {\n"
                "    param value = 1;\n"

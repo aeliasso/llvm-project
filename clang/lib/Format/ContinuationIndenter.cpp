@@ -1274,7 +1274,10 @@ unsigned ContinuationIndenter::addTokenOnNewLine(LineState &State,
   }
   if (Current.is(TT_BinaryOperator) && Current.CanBreakBefore) {
     CurrentState.BreakBeforeParameter = false;
-    CurrentState.AlignedTo = &Current;
+    if (!(Style.isDML() && State.Line->First &&
+          State.Line->First->TokenText == "log")) {
+      CurrentState.AlignedTo = &Current;
+    }
   }
   if (Style.AlignOperands != FormatStyle::OAS_DontAlign &&
       Current.is(TT_ConditionalExpr)) {
@@ -2008,8 +2011,10 @@ void ContinuationIndenter::moveStatePastFakeLParens(LineState &State,
     // Indent from 'LastSpace' unless these are fake parentheses encapsulating
     // a builder type call after 'return' or, if the alignment after opening
     // brackets is disabled.
+    const bool IsDMLLog = Style.isDML() && State.Line->First &&
+                          State.Line->First->TokenText == "log";
     if (!Current.isTrailingComment() &&
-        (Style.AlignOperands != FormatStyle::OAS_DontAlign ||
+        ((Style.AlignOperands != FormatStyle::OAS_DontAlign && !IsDMLLog) ||
          PrecedenceLevel < prec::Assignment) &&
         (!Previous || Previous->isNot(tok::kw_return) ||
          (!Style.isJava() && PrecedenceLevel > 0)) &&
@@ -2042,8 +2047,11 @@ void ContinuationIndenter::moveStatePastFakeLParens(LineState &State,
       if (Style.AlignOperands == FormatStyle::OAS_AlignAfterOperator)
         NewParenState.UnindentOperator = true;
       // Mark indentation as alignment if the expression is aligned.
-      if (Style.AlignOperands != FormatStyle::OAS_DontAlign)
+      if (Style.AlignOperands != FormatStyle::OAS_DontAlign &&
+          !(Style.isDML() && State.Line->First &&
+            State.Line->First->TokenText == "log")) {
         NewParenState.AlignedTo = Previous;
+      }
     }
 
     // Do not indent relative to the fake parentheses inserted for "." or "->".
