@@ -133,6 +133,23 @@ TEST_F(FormatTestDML, FormatsExplicitMethodDeclarationOperators) {
                "}");
 }
 
+TEST_F(FormatTestDML, BreaksObjectHeaderBeforeDescription) {
+  verifyFormat("template foo {\n"
+               "    connect my_connect is (signal_connect, post_init)\n"
+               "        \"describes a signal (active high)\" {\n"
+               "        method post_init() {\n"
+               "        }\n"
+               "    }\n"
+               "}",
+               "template foo {\n"
+               "connect my_connect is (signal_connect, post_init) \"describes "
+               "a signal (active high)\" {\n"
+               "        method post_init() {\n"
+               "        }\n"
+               "    }\n"
+               "}");
+}
+
 TEST_F(FormatTestDML, FormatsDMLPunctuation) {
   verifyFormat("device d {\n"
                "    register r size 4 @ 0x10;\n"

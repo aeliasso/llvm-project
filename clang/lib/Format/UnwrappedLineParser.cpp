@@ -1492,11 +1492,18 @@ void UnwrappedLineParser::parseStructuralElement(
     }
 
     if (IsMethod || IsObject) {
-      while (!eof() && FormatTok->isNoneOf(tok::l_brace, tok::semi))
-        if (FormatTok->is(tok::l_paren))
+      while (!eof() && FormatTok->isNoneOf(tok::l_brace, tok::semi)) {
+        if (FormatTok->is(tok::l_paren)) {
           parseParens();
-        else
+        } else {
+          if (IsObject && FormatTok->is(tok::string_literal) &&
+              FormatTok->NestingLevel == 0 && FormatTok->Previous &&
+              FormatTok->Previous->is(tok::r_paren)) {
+            FormatTok->MustBreakBefore = true;
+          }
           nextToken();
+        }
+      }
       if (FormatTok->is(tok::l_brace)) {
         FormatTok->setFinalizedType(IsMethod ? TT_FunctionLBrace
                                              : TT_ClassLBrace);
