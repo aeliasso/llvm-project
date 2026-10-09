@@ -118,6 +118,21 @@ TEST_F(FormatTestDML, FormatsReservedInBeforeForeachCondition) {
                "template foo{in each(index){}}");
 }
 
+TEST_F(FormatTestDML, FormatsExplicitMethodDeclarationOperators) {
+  verifyFormat("template foo {\n"
+               "    method bar() :{\n"
+               "    }\n"
+               "    method baz() :default {\n"
+               "    }\n"
+               "}",
+               "template foo {\n"
+               "    method bar() :{\n"
+               "    }\n"
+               "    method baz() : default {\n"
+               "    }\n"
+               "}");
+}
+
 TEST_F(FormatTestDML, FormatsDMLPunctuation) {
   verifyFormat("device d {\n"
                "    register r size 4 @ 0x10;\n"

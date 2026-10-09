@@ -4742,6 +4742,14 @@ bool TokenAnnotator::spaceRequiredBeforeParens(const FormatToken &Right) const {
 bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
                                           const FormatToken &Left,
                                           const FormatToken &Right) const {
+  if (Style.isDML() && Left.is(tok::colon) && Left.NestingLevel == 0 &&
+      Right.isOneOf(tok::l_brace, tok::kw_default)) {
+    for (const FormatToken *Token = Line.First; Token && Token != &Left;
+         Token = Token->Next) {
+      if (Token->is(Keywords.kw_method))
+        return false;
+    }
+  }
   if (Style.isDML() && Right.is(tok::l_paren) && Line.First &&
       ((Line.First->is(Keywords.kw_foreach) && Left.is(Keywords.kw_in)) ||
        (Line.First->is(Keywords.kw_in) && Left.is(Keywords.kw_each)))) {
@@ -5273,6 +5281,15 @@ bool TokenAnnotator::spaceRequiredBefore(const AnnotatedLine &Line,
     };
     if (IsBitRangeColon(Left) || IsBitRangeColon(Right))
       return false;
+    const FormatToken *NextNonComment = Right.getNextNonComment();
+    if (Right.is(tok::colon) && Right.NestingLevel == 0 && NextNonComment &&
+        NextNonComment->isOneOf(tok::l_brace, tok::kw_default)) {
+      for (const FormatToken *Token = Line.First; Token && Token != &Right;
+           Token = Token->Next) {
+        if (Token->is(Keywords.kw_method))
+          return true;
+      }
+    }
     if (Right.is(tok::colon)) {
       bool IsTernaryColon = false;
       for (const FormatToken *Tok = &Left; Tok; Tok = Tok->Previous) {
