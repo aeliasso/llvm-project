@@ -1469,9 +1469,11 @@ void UnwrappedLineParser::parseStructuralElement(
     }
 
     const bool IsMethod = FormatTok->is(Keywords.kw_method);
+    const FormatToken *NextToken = Tokens->peekNextToken();
     const bool IsObject = Keywords.isDMLObjectKeyword(*FormatTok) ||
                           (FormatTok->is(Keywords.kw_in) &&
-                           Tokens->peekNextToken()->is(Keywords.kw_each));
+                           (NextToken->is(Keywords.kw_each) ||
+                            Keywords.isDMLObjectKeyword(*NextToken)));
     if (FormatTok->is(Keywords.kw_foreach)) {
       nextToken();
       while (!eof() && FormatTok->isNoneOf(tok::l_brace, tok::semi))

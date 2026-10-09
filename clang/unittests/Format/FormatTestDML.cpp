@@ -60,6 +60,15 @@ TEST_F(FormatTestDML, FormatsDeviceObjectsAndMethods) {
                "}");
 }
 
+TEST_F(FormatTestDML, PointerParametersInExplicitObjectExtensions) {
+  verifyFormat("template foo {\n"
+               "    in bank registers {\n"
+               "        method my_method(transaction_t *t) {\n"
+               "        }\n"
+               "    }\n"
+               "}");
+}
+
 TEST_F(FormatTestDML, IndentsBlocksAndAttachesBraces) {
   verifyFormat("device d {\n"
                "    param value = 1;\n"
