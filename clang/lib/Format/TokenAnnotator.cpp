@@ -4742,6 +4742,11 @@ bool TokenAnnotator::spaceRequiredBeforeParens(const FormatToken &Right) const {
 bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
                                           const FormatToken &Left,
                                           const FormatToken &Right) const {
+  if (Style.isDML() && Right.is(tok::l_paren) && Line.First &&
+      ((Line.First->is(Keywords.kw_foreach) && Left.is(Keywords.kw_in)) ||
+       (Line.First->is(Keywords.kw_in) && Left.is(Keywords.kw_each)))) {
+    return true;
+  }
   if (Style.isDML()) {
     auto IsBitRangeColon = [](const FormatToken &Tok) {
       if (Tok.isNot(tok::colon))

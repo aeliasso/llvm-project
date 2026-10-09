@@ -107,6 +107,17 @@ TEST_F(FormatTestDML, FormatsControlFlowAndCalls) {
                "device d{method read(){if(x==1){foo (a,b);}}}");
 }
 
+TEST_F(FormatTestDML, FormatsReservedInBeforeForeachCondition) {
+  verifyFormat("device d {\n"
+               "    foreach x in (values) { foo(x); }\n"
+               "}",
+               "device d{foreach x in(values){foo(x);}}");
+  verifyFormat("template foo {\n"
+               "    in each (index) {}\n"
+               "}",
+               "template foo{in each(index){}}");
+}
+
 TEST_F(FormatTestDML, FormatsDMLPunctuation) {
   verifyFormat("device d {\n"
                "    register r size 4 @ 0x10;\n"
