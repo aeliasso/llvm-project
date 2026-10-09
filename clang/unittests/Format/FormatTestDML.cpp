@@ -116,6 +116,10 @@ TEST_F(FormatTestDML, FormatsReservedInBeforeForeachCondition) {
                "    in each (index) {}\n"
                "}",
                "template foo{in each(index){}}");
+  verifyFormat("device d {\n"
+               "    param sequence = each thing in (this);\n"
+               "}",
+               "device d{param sequence=each thing in(this);}");
 }
 
 TEST_F(FormatTestDML, FormatsExplicitMethodDeclarationOperators) {

@@ -4742,6 +4742,9 @@ bool TokenAnnotator::spaceRequiredBeforeParens(const FormatToken &Right) const {
 bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
                                           const FormatToken &Left,
                                           const FormatToken &Right) const {
+  const FormatToken *EachItem = Left.getPreviousNonComment();
+  const FormatToken *EachInExpression =
+      EachItem ? EachItem->getPreviousNonComment() : nullptr;
   if (Style.isDML() && Left.is(tok::colon) && Left.NestingLevel == 0 &&
       Right.isOneOf(tok::l_brace, tok::kw_default)) {
     for (const FormatToken *Token = Line.First; Token && Token != &Left;
@@ -4752,7 +4755,9 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
   }
   if (Style.isDML() && Right.is(tok::l_paren) && Line.First &&
       ((Line.First->is(Keywords.kw_foreach) && Left.is(Keywords.kw_in)) ||
-       (Line.First->is(Keywords.kw_in) && Left.is(Keywords.kw_each)))) {
+       (Line.First->is(Keywords.kw_in) && Left.is(Keywords.kw_each)) ||
+       (Left.is(Keywords.kw_in) && EachInExpression &&
+        EachInExpression->is(Keywords.kw_each)))) {
     return true;
   }
   if (Style.isDML()) {
