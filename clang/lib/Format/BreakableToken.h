@@ -293,16 +293,15 @@ public:
     AtDoubleQuotes, // The C# verbatim string is quoted with the at sign and
                     // double quotes.
   };
-  /// Creates a breakable token for a single line string literal for C#, DML,
-  /// Java, JavaScript, or Verilog.
+  /// Creates a breakable token for a single line string literal for C#, Java,
+  /// JavaScript, or Verilog.
   ///
   /// \p StartColumn specifies the column in which the token will start
   /// after formatting.
   BreakableStringLiteralUsingOperators(
       const FormatToken &Tok, QuoteStyleType QuoteStyle, bool UnindentPlus,
       unsigned StartColumn, unsigned UnbreakableTailLength, bool InPPDirective,
-      encoding::Encoding Encoding, const FormatStyle &Style,
-      unsigned ContinuationColumn = 0);
+      encoding::Encoding Encoding, const FormatStyle &Style);
   unsigned getRemainingLength(unsigned LineIndex, unsigned Offset,
                               unsigned StartColumn) const override;
   unsigned getContentStartColumn(unsigned LineIndex, bool Break) const override;

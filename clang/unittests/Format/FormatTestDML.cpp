@@ -79,22 +79,6 @@ TEST_F(FormatTestDML, ContinuedLogStringsUseStatementIndentation) {
                "}");
 }
 
-TEST_F(FormatTestDML, BreaksLongStringsWithExplicitConcatenation) {
-  verifyFormat("template foo {\n"
-               "    method foo() {\n"
-               "        log info: \"a very very very very very very very very "
-               "very very very \"\n"
-               "            + \"very long message\";\n"
-               "    }\n"
-               "}",
-               "template foo {\n"
-               "    method foo() {\n"
-               "        log info: \"a very very very very very very very very "
-               "very very very very long message\";\n"
-               "    }\n"
-               "}");
-}
-
 TEST_F(FormatTestDML, IndentsBlocksAndAttachesBraces) {
   verifyFormat("device d {\n"
                "    param value = 1;\n"

@@ -2673,7 +2673,7 @@ ContinuationIndenter::createBreakableToken(const FormatToken &Current,
                                          : Current.UnbreakableTailLength;
 
     if (Style.isVerilog() || Style.isJava() || Style.isJavaScript() ||
-        Style.isCSharp() || Style.isDML()) {
+        Style.isCSharp()) {
       BreakableStringLiteralUsingOperators::QuoteStyleType QuoteStyle;
       if (Style.isJavaScript() && Text.starts_with("'") &&
           Text.ends_with("'")) {
@@ -2686,16 +2686,10 @@ ContinuationIndenter::createBreakableToken(const FormatToken &Current,
       } else {
         return nullptr;
       }
-      const unsigned ContinuationColumn =
-          Style.isDML() && State.Line->First &&
-                  State.Line->First->is(Keywords.kw_log)
-              ? State.FirstIndent + Style.ContinuationIndentWidth
-              : 0;
       return std::make_unique<BreakableStringLiteralUsingOperators>(
           Current, QuoteStyle,
           /*UnindentPlus=*/shouldUnindentNextOperator(Current), StartColumn,
-          UnbreakableTailLength, State.Line->InPPDirective, Encoding, Style,
-          ContinuationColumn);
+          UnbreakableTailLength, State.Line->InPPDirective, Encoding, Style);
     }
 
     StringRef Prefix;

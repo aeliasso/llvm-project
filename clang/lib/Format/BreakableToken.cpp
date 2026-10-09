@@ -282,15 +282,14 @@ void BreakableStringLiteral::insertBreak(unsigned LineIndex,
 BreakableStringLiteralUsingOperators::BreakableStringLiteralUsingOperators(
     const FormatToken &Tok, QuoteStyleType QuoteStyle, bool UnindentPlus,
     unsigned StartColumn, unsigned UnbreakableTailLength, bool InPPDirective,
-    encoding::Encoding Encoding, const FormatStyle &Style,
-    unsigned ContinuationColumn)
+    encoding::Encoding Encoding, const FormatStyle &Style)
     : BreakableStringLiteral(
           Tok, StartColumn, /*Prefix=*/QuoteStyle == SingleQuotes ? "'"
                             : QuoteStyle == AtDoubleQuotes        ? "@\""
                                                                   : "\"",
           /*Postfix=*/QuoteStyle == SingleQuotes ? "'" : "\"",
           UnbreakableTailLength, InPPDirective, Encoding, Style),
-      BracesNeeded(Tok.isNot(TT_StringInConcatenation) && !Style.isDML()),
+      BracesNeeded(Tok.isNot(TT_StringInConcatenation)),
       QuoteStyle(QuoteStyle) {
   // Find the replacement text for inserting braces and quotes and line breaks.
   // We don't create an allocated string concatenated from parts here because it
@@ -341,10 +340,6 @@ BreakableStringLiteralUsingOperators::BreakableStringLiteralUsingOperators(
   if (!Style.isVerilog() && SignOnNewLine && !BracesNeeded && UnindentPlus &&
       Style.AlignOperands == FormatStyle::OAS_AlignAfterOperator) {
     ContinuationIndent -= 2;
-  }
-  if (ContinuationColumn != 0) {
-    ContinuationIndent =
-        static_cast<int>(ContinuationColumn) - static_cast<int>(StartColumn);
   }
 }
 
